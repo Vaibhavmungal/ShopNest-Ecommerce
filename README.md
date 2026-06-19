@@ -1,11 +1,5 @@
 # 🛍️ ShopNest — PHP E-Commerce Platform
 
-![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?style=for-the-badge&logo=php&logoColor=white)
-![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
-![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)
-![AWS](https://img.shields.io/badge/AWS-S3%20%7C%20SNS-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
-
 > A full-featured, modern e-commerce web application built with PHP, MySQL, and Bootstrap 5. Includes a complete customer-facing storefront and a powerful admin panel.
 
 ---
@@ -31,18 +25,6 @@
 - **Inventory** — Stock management and low-stock alerts
 - **Reports** — Sales reports and analytics
 
-### ☁️ AWS Integrations
-- **AWS S3** — Product image storage
-- **AWS SNS** — Order notification emails/SMS
-
----
-
-## 🖥️ Screenshots
-
-| Homepage | Products | Admin Dashboard |
-|----------|----------|-----------------|
-| ![Home](assets/images/no-image.png) | ![Products](assets/images/no-image.png) | ![Admin](assets/images/no-image.png) |
-
 ---
 
 ## 🚀 Getting Started
@@ -51,7 +33,6 @@
 - PHP 8.0+
 - MySQL 8.0+
 - Apache (XAMPP recommended)
-- Composer *(optional for AWS SDK)*
 
 ### Installation
 
@@ -88,13 +69,6 @@ APP_NAME=ShopNest
 APP_URL=http://localhost/aws-ecommerce
 APP_ENV=development
 APP_DEBUG=true
-
-# AWS (optional)
-AWS_ACCESS_KEY_ID=your-key
-AWS_SECRET_ACCESS_KEY=your-secret
-AWS_DEFAULT_REGION=ap-south-1
-AWS_BUCKET=shopnest-products
-```
 
 **5. Open in browser**
 ```
@@ -158,10 +132,6 @@ Password: (set in DB during setup)
 | Frontend | HTML5, Bootstrap 5.3, Vanilla JS |
 | Icons | Bootstrap Icons |
 | Fonts | Google Fonts — Outfit, Inter |
-| Storage | AWS S3 (optional) |
-| Notifications | AWS SNS (optional) |
-| Server | Apache (XAMPP) |
-
 ---
 
 ## 📦 Key Pages
