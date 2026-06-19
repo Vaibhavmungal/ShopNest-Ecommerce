@@ -67,6 +67,7 @@ APP_NAME=ShopNest
 APP_URL=http://localhost/aws-ecommerce
 APP_ENV=development
 APP_DEBUG=true
+```
 
 **5. Open in browser**
 ```
@@ -96,8 +97,7 @@ aws-ecommerce/
 │   └── images/
 ├── config/
 │   ├── database.php    # PDO connection
-│   ├── constants.php   # App constants
-│   └── aws.php         # AWS SDK config
+│   └── constants.php   # App constants
 ├── customer/           # Customer pages (cart, checkout, profile)
 ├── database/           # SQL schema & seeds
 ├── includes/           # Shared PHP (header, footer, functions)
@@ -130,6 +130,8 @@ Password: (set in DB during setup)
 | Frontend | HTML5, Bootstrap 5.3, Vanilla JS |
 | Icons | Bootstrap Icons |
 | Fonts | Google Fonts — Outfit, Inter |
+| Server | Apache (XAMPP) |
+
 ---
 
 ## 📦 Key Pages
