@@ -2,8 +2,6 @@
 
 > A full-featured, modern e-commerce web application built with PHP, MySQL, and Bootstrap 5. Includes a complete customer-facing storefront and a powerful admin panel.
 
----
-
 ## ✨ Features
 
 ### 🛒 Customer Side
