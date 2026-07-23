@@ -15,6 +15,12 @@
 
 ## 📋 Table of Contents
 
+- [Prerequisites & Service Downloads](#-prerequisites--service-downloads)
+  - [Git](#1--git)
+  - [PHP 8.2](#2--php-82)
+  - [MySQL 8.0](#3--mysql-80)
+  - [Composer 2.x](#4--composer-2x)
+  - [Docker & Docker Compose](#5--docker--docker-compose)
 - [Features](#-features)
 - [Tech Stack & Versions](#️-tech-stack--versions)
 - [Project Structure](#-project-structure)
@@ -31,6 +37,248 @@
 - [Contributing](#-contributing)
 - [License](#-license)
 - [Author](#-author)
+
+---
+
+## 📥 Prerequisites & Service Downloads
+
+Install the following tools before running the project. Commands are provided for **Windows**, **macOS**, and **Linux**.
+
+---
+
+### 1. 🔧 Git
+
+> Required to clone the repository.
+
+| OS | Command |
+|----|---------|
+| **Windows** | [Download Git for Windows](https://git-scm.com/download/win) — run the installer |
+| **macOS** | `brew install git` |
+| **Linux (Debian/Ubuntu)** | `sudo apt update && sudo apt install -y git` |
+| **Linux (RHEL/CentOS)** | `sudo yum install -y git` |
+
+**Verify:**
+```bash
+git --version
+# Expected: git version 2.x.x
+```
+
+---
+
+### 2. 🐘 PHP 8.2
+
+> Required to run the application and Composer tools locally.
+
+**Windows — via XAMPP (easiest, bundles PHP + Apache + MySQL):**
+```
+Download XAMPP 8.2: https://www.apachefriends.org/download.html
+Run the installer and ensure PHP 8.2 is selected.
+```
+
+**Windows — standalone PHP:**
+```powershell
+# Using winget
+winget install PHP.PHP.8.2
+
+# Using Chocolatey
+choco install php --version=8.2
+```
+
+**macOS:**
+```bash
+# Using Homebrew
+brew install php@8.2
+echo 'export PATH="/usr/local/opt/php@8.2/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+**Linux (Debian/Ubuntu):**
+```bash
+sudo apt update
+sudo apt install -y software-properties-common
+sudo add-apt-repository ppa:ondrej/php -y
+sudo apt update
+sudo apt install -y php8.2 php8.2-cli php8.2-mysql php8.2-gd php8.2-zip \
+     php8.2-mbstring php8.2-xml php8.2-curl php8.2-opcache
+```
+
+**Linux (RHEL/CentOS):**
+```bash
+sudo dnf install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm
+sudo dnf module enable php:remi-8.2 -y
+sudo dnf install -y php php-pdo php-mysqlnd php-gd php-zip php-mbstring
+```
+
+**Verify:**
+```bash
+php --version
+# Expected: PHP 8.2.x
+```
+
+---
+
+### 3. 🐬 MySQL 8.0
+
+> Required for the database. Skip if using XAMPP or Docker (both bundle MySQL).
+
+**Windows:**
+```
+Download MySQL Installer: https://dev.mysql.com/downloads/installer/
+Choose "MySQL Server 8.0" during setup.
+```
+
+```powershell
+# Using Chocolatey
+choco install mysql --version=8.0
+
+# Using winget
+winget install Oracle.MySQL
+```
+
+**macOS:**
+```bash
+brew install mysql@8.0
+brew services start mysql@8.0
+```
+
+**Linux (Debian/Ubuntu):**
+```bash
+sudo apt update
+sudo apt install -y mysql-server
+sudo systemctl start mysql
+sudo systemctl enable mysql
+# Secure the installation
+sudo mysql_secure_installation
+```
+
+**Linux (RHEL/CentOS):**
+```bash
+sudo dnf install -y mysql-server
+sudo systemctl start mysqld
+sudo systemctl enable mysqld
+```
+
+**Verify:**
+```bash
+mysql --version
+# Expected: mysql  Ver 8.0.x
+```
+
+---
+
+### 4. 📦 Composer 2.x
+
+> PHP's dependency manager — required to install `phpunit`, `phpcs`, and `phpstan`.
+
+**Windows:**
+```
+Download Composer-Setup.exe: https://getcomposer.org/Composer-Setup.exe
+Run the installer — it auto-detects PHP and adds Composer to PATH.
+```
+
+```powershell
+# Using Chocolatey
+choco install composer
+
+# Using winget
+winget install Composer.Composer
+```
+
+**macOS:**
+```bash
+brew install composer
+```
+
+**Linux (all distros — universal installer):**
+```bash
+php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+php composer-setup.php
+php -r "unlink('composer-setup.php');"
+sudo mv composer.phar /usr/local/bin/composer
+```
+
+**Verify:**
+```bash
+composer --version
+# Expected: Composer version 2.x.x
+```
+
+---
+
+### 5. 🐳 Docker & Docker Compose
+
+> Required only for **Option B** (Docker setup). Skip if using XAMPP locally.
+
+**Windows & macOS — Docker Desktop (includes Compose):**
+```
+Download Docker Desktop: https://www.docker.com/products/docker-desktop/
+Run the installer and start Docker Desktop.
+```
+
+```powershell
+# Windows — using winget
+winget install Docker.DockerDesktop
+
+# Windows — using Chocolatey
+choco install docker-desktop
+```
+
+```bash
+# macOS — using Homebrew
+brew install --cask docker
+```
+
+**Linux (Debian/Ubuntu):**
+```bash
+# Install Docker Engine
+sudo apt update
+sudo apt install -y ca-certificates curl gnupg
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# Allow running Docker without sudo
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+**Linux (RHEL/CentOS):**
+```bash
+sudo dnf install -y yum-utils
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker $USER
+```
+
+**Verify:**
+```bash
+docker --version
+# Expected: Docker version 24.x.x or later
+
+docker compose version
+# Expected: Docker Compose version v2.x.x
+```
+
+---
+
+### 6. ✅ Verify All Services at Once
+
+Run this to check every required tool in one go:
+
+```bash
+git --version        # git version 2.x.x
+php --version        # PHP 8.2.x
+mysql --version      # mysql  Ver 8.0.x
+composer --version   # Composer version 2.x.x
+docker --version     # Docker version 24.x.x
+docker compose version  # Docker Compose version v2.x.x
+```
 
 ---
 
