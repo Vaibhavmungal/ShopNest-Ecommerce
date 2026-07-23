@@ -522,6 +522,39 @@ Then extend the `package` job in `ci-cd.yml` with an `scp` or `rsync` step using
 
 ---
 
+### Testing Jenkins & Docker CI/CD Pipeline
+
+A ready-to-use [`Jenkinsfile`](Jenkinsfile) is included in the project root for testing with **Jenkins + Docker Compose**.
+
+#### Pipeline Stages in `Jenkinsfile`
+
+```
+1. 📥 Checkout        ──► Clones repository / pulls latest commit
+2. 🔍 PHP Lint         ──► Runs php -l on all PHP files
+3. 🐳 Build Image      ──► Builds shopnest-app:latest Docker image
+4. ⚙️ Setup Env        ──► Injects .env (falls back to .env.example for testing)
+5. 🚀 Deploy           ──► Runs docker compose up -d --build
+6. 🏥 Health Check     ──► Verifies app container is running on port 8080
+7. 🧹 Cleanup          ──► Prunes dangling images to free disk space
+```
+
+#### How to Test in Jenkins (3 Steps)
+
+1. **Create a new Pipeline Item in Jenkins**
+   - Click **New Item** → Enter name (e.g. `ShopNest-CI-CD`) → Select **Pipeline** → Click **OK**.
+
+2. **Configure Pipeline Definition**
+   - Under **Pipeline**, set **Definition** to `Pipeline script from SCM`.
+   - Set **SCM** to `Git`.
+   - Set **Repository URL** to `https://github.com/Vaibhavmungal/ShopNest-Ecommerce.git`.
+   - Set **Script Path** to `Jenkinsfile`.
+
+3. **Run the Build**
+   - Click **Build Now**.
+   - Watch the pipeline stages run. Once completed, visit `http://localhost:8080` (or `http://<your-jenkins-ip>:8080`) to see the deployed app!
+
+---
+
 ### Running Checks Locally
 
 **Prerequisites:**
