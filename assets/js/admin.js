@@ -251,7 +251,8 @@ document.addEventListener('change', async e => {
   const type = toggle.dataset.type;
   const checked = toggle.checked;
   try {
-    const res = await fetch('/aws-ecommerce/api/toggle-status.php', {
+    const baseUrl = window.location.pathname.startsWith('/aws-ecommerce') ? '/aws-ecommerce' : '';
+    const res = await fetch(`${baseUrl}/api/toggle-status.php`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, type, status: checked ? 1 : 0 })

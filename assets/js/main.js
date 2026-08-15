@@ -17,7 +17,8 @@ const Cart = {
   },
   async _request(action, data) {
     try {
-      const res = await fetch('/aws-ecommerce/api/cart.php', {
+      const baseUrl = window.location.pathname.startsWith('/aws-ecommerce') ? '/aws-ecommerce' : '';
+      const res = await fetch(`${baseUrl}/api/cart.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action, ...data })
@@ -33,7 +34,8 @@ const Cart = {
 const Wishlist = {
   async toggle(productId) {
     try {
-      const res = await fetch('/aws-ecommerce/api/wishlist.php', {
+      const baseUrl = window.location.pathname.startsWith('/aws-ecommerce') ? '/aws-ecommerce' : '';
+      const res = await fetch(`${baseUrl}/api/wishlist.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ product_id: productId })
@@ -220,12 +222,13 @@ if (searchInput) {
     }
     debounceTimer = setTimeout(async () => {
       try {
-        const res = await fetch(`/aws-ecommerce/api/search.php?q=${encodeURIComponent(q)}`);
+        const baseUrl = window.location.pathname.startsWith('/aws-ecommerce') ? '/aws-ecommerce' : '';
+        const res = await fetch(`${baseUrl}/api/search.php?q=${encodeURIComponent(q)}`);
         const data = await res.json();
         if (dropdown && data.products?.length) {
           dropdown.innerHTML = data.products.map(p => `
-            <a href="/aws-ecommerce/products/detail.php?slug=${p.slug}" class="search-suggestion-item">
-              <img src="${p.image}" width="36" height="36" style="border-radius:6px;object-fit:cover;" onerror="this.src='/aws-ecommerce/assets/images/no-image.png'">
+            <a href="${baseUrl}/products/detail.php?slug=${p.slug}" class="search-suggestion-item">
+              <img src="${p.image}" width="36" height="36" style="border-radius:6px;object-fit:cover;" onerror="this.src='${baseUrl}/assets/images/no-image.png'">
               <div>
                 <div style="color:#e2e8f0;font-size:.85rem;font-weight:500;">${p.name}</div>
                 <div style="color:#818cf8;font-size:.78rem;">${p.price}</div>
