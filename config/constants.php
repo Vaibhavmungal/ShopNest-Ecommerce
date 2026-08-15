@@ -22,7 +22,7 @@ define('APP_ENV',      getenv('APP_ENV')  ?: 'development');
 define('APP_DEBUG',    getenv('APP_DEBUG') === 'true');
 
 // Currency
-define('CURRENCY_SYMBOL', '₹');
+define('CURRENCY_SYMBOL', 'Rs. ');
 define('CURRENCY_CODE',   'INR');
 
 // Pagination

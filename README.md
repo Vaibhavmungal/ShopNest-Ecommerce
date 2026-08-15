@@ -223,6 +223,12 @@ sudo systemctl enable jenkins
 sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 
 # Access Jenkins at:  http://<your-server-ip>:8080
+
+# 💡 PIPELINE DEPENDENCIES:
+# The Jenkins pipeline runs syntax checks on the host machine.
+# You must install PHP and its extensions on the Jenkins host:
+sudo apt update
+sudo apt install -y php-cli php-xml php-mbstring php-zip php-gd php-mysql php-curl
 ```
 
 ---
