@@ -48,7 +48,9 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo "📥 Checking out repository..."
-                checkout scm
+                git branch: "${BRANCH}",
+                    credentialsId: 'github-credentials',
+                    url: "${REPO_URL}"
                 echo "✅ Checkout complete. Build #${BUILD_NUMBER}"
             }
         }
@@ -57,7 +59,7 @@ pipeline {
         stage('PHP Lint') {
             steps {
                 echo "🔍 Running PHP syntax check on all .php files..."
-                sh '''
+                sh '''#!/bin/bash
                     which php || { echo "❌ PHP not found on agent. Install PHP 8.2."; exit 1; }
                     php --version
 
