@@ -9,7 +9,14 @@ define('APP_NAME',     getenv('APP_NAME') ?: 'ShopNest');
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || ($_SERVER['SERVER_PORT'] ?? 80) == 443) ? "https" : "http";
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $default_url = ($host === 'localhost') ? "$protocol://$host/aws-ecommerce" : "$protocol://$host";
-define('APP_URL', rtrim(getenv('APP_URL') ?: $default_url, '/'));
+
+$env_url = getenv('APP_URL');
+if ($env_url && (str_contains($env_url, 'localhost') && $host !== 'localhost')) {
+    $app_url = $default_url;
+} else {
+    $app_url = $env_url ?: $default_url;
+}
+define('APP_URL', rtrim($app_url, '/'));
 
 define('APP_ENV',      getenv('APP_ENV')  ?: 'development');
 define('APP_DEBUG',    getenv('APP_DEBUG') === 'true');
