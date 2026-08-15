@@ -183,7 +183,7 @@ pipeline {
             ╔══════════════════════════════════════════╗
             ║  ✅  BUILD #${BUILD_NUMBER} SUCCEEDED      ║
             ║  ShopNest deployed successfully!         ║
-            ║  http://<your-server-ip>:8080            ║
+            ║  http://<your-server-ip>:8082            ║
             ╚══════════════════════════════════════════╝
             """
         }
