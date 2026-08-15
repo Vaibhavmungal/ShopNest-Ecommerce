@@ -31,7 +31,6 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '10'))   // keep last 10 builds
         timeout(time: 30, unit: 'MINUTES')               // fail if build hangs
         disableConcurrentBuilds()                        // one build at a time
-        timestamps()                                     // add timestamps to logs
     }
 
     // ── TRIGGERS ─────────────────────────────────────────────
