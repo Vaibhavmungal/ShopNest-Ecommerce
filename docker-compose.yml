@@ -67,7 +67,7 @@ services:
     environment:
       PMA_HOST: db                 # connect to the "db" service above
       PMA_USER: root
-      PMA_PASSWORD: root_secret
+      PMA_PASSWORD: ""
     depends_on:
       db:
         condition: service_healthy

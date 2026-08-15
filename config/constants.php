@@ -4,7 +4,13 @@
 // ============================================================
 
 define('APP_NAME',     getenv('APP_NAME') ?: 'ShopNest');
-define('APP_URL',      rtrim(getenv('APP_URL') ?: 'http://localhost/aws-ecommerce', '/'));
+
+// Auto-detect host for dynamic redirects (works for both Docker and local XAMPP)
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || ($_SERVER['SERVER_PORT'] ?? 80) == 443) ? "https" : "http";
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$default_url = ($host === 'localhost') ? "$protocol://$host/aws-ecommerce" : "$protocol://$host";
+define('APP_URL', rtrim(getenv('APP_URL') ?: $default_url, '/'));
+
 define('APP_ENV',      getenv('APP_ENV')  ?: 'development');
 define('APP_DEBUG',    getenv('APP_DEBUG') === 'true');
 
