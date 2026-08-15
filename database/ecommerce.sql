@@ -226,10 +226,10 @@ SET FOREIGN_KEY_CHECKS = 1;
 --  SEED DATA
 -- ============================================================
 
--- Default Admin: admin@shopnest.com / admin123
+-- Default Admin: admin@shopnest.com / Admin@1234
 INSERT INTO `admins` (`name`, `email`, `password`, `role`) VALUES
-('Super Admin', 'admin@shopnest.com', '$2y$12$HOK3KEAC82tKhZXmjsZvee64AqI2RCj9CWlPrepdsyAYIhdwXpi4C', 'super_admin');
--- NOTE: Password hash is for 'admin123' — change immediately after first login.
+('Super Admin', 'admin@shopnest.com', '$2y$12$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'super_admin');
+-- NOTE: Password hash is for 'Admin@1234' — change immediately after first login.
 
 -- Sample Categories
 INSERT INTO `categories` (`name`, `slug`, `description`, `status`, `sort_order`) VALUES

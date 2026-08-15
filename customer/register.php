@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <label class="form-label">Phone Number</label>
           <div class="input-group">
             <span class="input-group-text" style="background:var(--bg-card2);border-color:var(--border);color:var(--text-muted);"><i class="bi bi-phone"></i></span>
-            <input type="tel" name="phone" class="form-control" placeholder="99xxxxxx22" value="<?= e($_POST['phone'] ?? '') ?>">
+            <input type="tel" name="phone" class="form-control" placeholder="9876543210" value="<?= e($_POST['phone'] ?? '') ?>">
           </div>
         </div>
         <div class="col-md-6">
