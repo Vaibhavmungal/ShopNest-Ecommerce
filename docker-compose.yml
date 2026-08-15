@@ -38,19 +38,16 @@ services:
     image: mysql:8.0
     container_name: shopnest_db
     restart: unless-stopped
-    env_file: .env                           # reads DB_NAME, DB_USER, DB_PASS
     environment:
-      MYSQL_ROOT_PASSWORD: root_secret
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       MYSQL_DATABASE: ${DB_NAME:-aws_ecommerce}
-      MYSQL_USER: ${DB_USER:-shopnest}
-      MYSQL_PASSWORD: ${DB_PASS:-shopnest_pass}
     ports:
       - "3307:3306"                          # host:container
     volumes:
       - db_data:/var/lib/mysql               # persist DB data across restarts
       - ./database/ecommerce.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
     healthcheck:                             # app waits until this passes
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD || exit 1"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 10
