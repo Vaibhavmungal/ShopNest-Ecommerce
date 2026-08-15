@@ -50,7 +50,7 @@ services:
       - db_data:/var/lib/mysql               # persist DB data across restarts
       - ./database/ecommerce.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
     healthcheck:                             # app waits until this passes
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "--silent"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
