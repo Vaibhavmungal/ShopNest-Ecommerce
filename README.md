@@ -180,6 +180,11 @@ sudo apt install -y docker-ce docker-ce-cli containerd.io \
 sudo usermod -aG docker $USER
 newgrp docker
 
+#if not working ---------Extra 
+sudo usermod -aG docker jenkins
+sudo systemctl restart jenkins
+sudo -u jenkins docker ps
+
 # Start and enable Docker on boot
 sudo systemctl start docker
 sudo systemctl enable docker
