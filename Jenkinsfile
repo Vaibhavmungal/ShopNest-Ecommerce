@@ -34,17 +34,17 @@ pipeline {
     }
 
     // ── TRIGGERS ─────────────────────────────────────────────
-    // Polls GitHub every minute for new commits.
-    // Alternatively, set up a GitHub webhook pointing to:
+    // Triggered automatically by GitHub Webhook on push events.
+    // Ensure you have configured a webhook in your GitHub repository settings pointing to:
     //   http://<jenkins-server>:8080/github-webhook/
     triggers {
-        pollSCM('* * * * *')
+        githubPush()
     }
 
     stages {
 
         // ── STAGE 1: CHECKOUT ─────────────────────────────────
-        stage('Checkout') {
+        stage('Git Checkout') {
             steps {
                 echo "📥 Checking out repository..."
                 git branch: "${BRANCH}",
@@ -55,7 +55,7 @@ pipeline {
         }
 
         // ── STAGE 2: PHP SYNTAX LINT ──────────────────────────
-        stage('PHP Lint') {
+        stage('PHP ENV Check') {
             steps {
                 echo "🔍 Running PHP syntax check on all .php files..."
                 sh '''#!/bin/bash
@@ -97,7 +97,29 @@ pipeline {
             }
         }
 
-        // ── STAGE 4: SETUP .ENV FILE ──────────────────────────
+        // ── STAGE 4: PUSH TO DOCKER HUB ─────────────────────────
+        stage('Push to Docker Hub') {
+            steps {
+                echo "🐳 Pushing Docker image to Docker Hub..."
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', 
+                                                     usernameVariable: 'DOCKER_USER', 
+                                                     passwordVariable: 'DOCKER_PASS')]) {
+                        sh '''
+                            echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
+                            docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}
+                            docker tag ${IMAGE_NAME}:latest ${DOCKER_USER}/${IMAGE_NAME}:latest
+                            docker push ${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}
+                            docker push ${DOCKER_USER}/${IMAGE_NAME}:latest
+                            docker logout
+                        '''
+                    }
+                    echo "✅ Docker image pushed successfully!"
+                }
+            }
+        }
+
+        // ── STAGE 5: SETUP .ENV FILE ──────────────────────────
         // For testing, uses .env.example if secret credentials are not set
         stage('Setup Environment') {
             steps {
@@ -117,7 +139,7 @@ pipeline {
             }
         }
 
-        // ── STAGE 5: DEPLOY WITH DOCKER COMPOSE ───────────────
+        // ── STAGE 6: DEPLOY WITH DOCKER COMPOSE ───────────────
         stage('Deploy') {
             steps {
                 echo "🚀 Deploying ShopNest with Docker Compose..."
@@ -135,7 +157,7 @@ pipeline {
             }
         }
 
-        // ── STAGE 6: HEALTH CHECK ─────────────────────────────
+        // ── STAGE 7: HEALTH CHECK ─────────────────────────────
         stage('Health Check') {
             steps {
                 echo "🏥 Waiting for containers to become healthy..."
@@ -161,7 +183,7 @@ pipeline {
             }
         }
 
-        // ── STAGE 7: CLEANUP OLD IMAGES ───────────────────────
+        // ── STAGE 8: CLEANUP OLD IMAGES ───────────────────────
         stage('Cleanup') {
             steps {
                 echo "🧹 Removing dangling Docker images to free disk space..."
