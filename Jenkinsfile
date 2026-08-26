@@ -44,7 +44,7 @@ pipeline {
     stages {
 
         // ── STAGE 1: CHECKOUT ─────────────────────────────────
-        stage('Git Checkout') {
+        stage('Stage 1: Git Checkout') {
             steps {
                 echo "📥 Checking out repository..."
                 git branch: "${BRANCH}",
@@ -55,7 +55,7 @@ pipeline {
         }
 
         // ── STAGE 2: PHP SYNTAX LINT ──────────────────────────
-        stage('PHP ENV Check') {
+        stage('Stage 2: PHP ENV Check') {
             steps {
                 echo "🔍 Running PHP syntax check on all .php files..."
                 sh '''#!/bin/bash
@@ -81,7 +81,7 @@ pipeline {
         }
 
         // ── STAGE 3: BUILD DOCKER IMAGE ───────────────────────
-        stage('Build Docker Image') {
+        stage('Stage 3: Build Docker Image') {
             steps {
                 echo "🐳 Building Docker image: ${IMAGE_NAME}:${IMAGE_TAG}..."
                 sh '''
@@ -98,7 +98,7 @@ pipeline {
         }
 
         // ── STAGE 4: PUSH TO DOCKER HUB ─────────────────────────
-        stage('Push to Docker Hub') {
+        stage('Stage 4: Push to Docker Hub') {
             steps {
                 echo "🐳 Pushing Docker image to Docker Hub..."
                 script {
@@ -121,7 +121,7 @@ pipeline {
 
         // ── STAGE 5: SETUP .ENV FILE ──────────────────────────
         // For testing, uses .env.example if secret credentials are not set
-        stage('Setup Environment') {
+        stage('Stage 5: Setup Environment') {
             steps {
                 echo "⚙️ Preparing .env configuration..."
                 script {
@@ -140,7 +140,7 @@ pipeline {
         }
 
         // ── STAGE 6: DEPLOY WITH DOCKER COMPOSE ───────────────
-        stage('Deploy') {
+        stage('Stage 6: Deploy') {
             steps {
                 echo "🚀 Deploying ShopNest with Docker Compose..."
                 sh '''
@@ -158,7 +158,7 @@ pipeline {
         }
 
         // ── STAGE 7: HEALTH CHECK ─────────────────────────────
-        stage('Health Check') {
+        stage('Stage 7: Health Check') {
             steps {
                 echo "🏥 Waiting for containers to become healthy..."
                 sh '''
@@ -184,7 +184,7 @@ pipeline {
         }
 
         // ── STAGE 8: CLEANUP OLD IMAGES ───────────────────────
-        stage('Cleanup') {
+        stage('Stage 8: Cleanup') {
             steps {
                 echo "🧹 Removing dangling Docker images to free disk space..."
                 sh '''
