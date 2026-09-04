@@ -1,68 +1,41 @@
 # ============================================================
-#  Dockerfile — ShopNest (PHP 8.2 + Apache)
-#
-#  HOW TO USE:
-#  Build the image:
-#    docker build -t shopnest .
-#
-#  Run the container (app only, no DB):
-#    docker run -p 8080:80 --env-file .env shopnest
-#
-#  Or use docker-compose to start app + DB + phpMyAdmin together:
-#    docker compose up -d
+#  Dockerfile — ShopNest (PHP 8.2 + Apache + Embedded MariaDB)
+#  Self-contained: runs standalone with 1 command or with RDS
 # ============================================================
 
-# Use the official PHP 8.2 image that already has Apache built in
 FROM php:8.2-apache
 
-# -----------------------------------------------------------
-# 1. SYSTEM DEPENDENCIES + PHP EXTENSIONS
-#    - Install Linux libraries needed to compile PHP extensions
-#    - Then install the PHP extensions themselves
-#    - Finally clean up apt cache to keep the image small
-# -----------------------------------------------------------
+# 1. Install dependencies, PHP extensions, and MariaDB server
 RUN apt-get update && apt-get install -y \
+    mariadb-server mariadb-client \
     libpng-dev libjpeg-dev libfreetype6-dev libzip-dev \
     zip unzip curl \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) pdo pdo_mysql gd zip opcache mysqli \
     && rm -rf /var/lib/apt/lists/*
 
-# -----------------------------------------------------------
-# 2. APACHE CONFIGURATION
-#    - a2enmod rewrite       → enables URL rewriting (.htaccess)
-#    - ServerName localhost  → suppresses Apache startup warning
-#    - AllowOverride All     → lets .htaccess files work in /var/www/html
-# -----------------------------------------------------------
+# 2. Apache configuration
 RUN a2enmod rewrite \
     && echo "ServerName localhost" >> /etc/apache2/apache2.conf \
     && sed -i 's|AllowOverride None|AllowOverride All|g' /etc/apache2/apache2.conf
 
-# -----------------------------------------------------------
-# 3. PHP CONFIGURATION
-#    Copy our custom php.ini (upload limits, error settings etc.)
-#    into the PHP config directory so PHP picks it up automatically
-# -----------------------------------------------------------
+# 3. PHP custom configuration
 COPY docker/php.ini /usr/local/etc/php/conf.d/shopnest.ini
 
-# -----------------------------------------------------------
-# 4. APPLICATION FILES
-#    - WORKDIR sets the working directory inside the container
-#    - COPY . . copies all project files into /var/www/html
-#    - Then we create uploads/ and logs/ folders and give
-#      the web server (www-data) permission to write to them
-# -----------------------------------------------------------
+# 4. Copy application source code
 WORKDIR /var/www/html
 COPY . .
-RUN mkdir -p uploads logs \
+
+# 5. Setup Entrypoint and runtime directories
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh \
+    && chmod +x /usr/local/bin/entrypoint.sh \
+    && mkdir -p uploads logs /var/run/mysqld /var/lib/mysql \
     && chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html \
-    && chmod -R 775 /var/www/html/uploads /var/www/html/logs
+    && chmod -R 775 /var/www/html/uploads /var/www/html/logs \
+    && chown -R mysql:mysql /var/lib/mysql /var/run/mysqld
 
-# -----------------------------------------------------------
-# 5. EXPOSE PORT
-#    Tell Docker this container listens on port 80 (HTTP)
-#    The actual host port mapping is done at runtime:
-#      docker run -p 8080:80 ...   ← maps your PC's 8080 → container's 80
-# -----------------------------------------------------------
 EXPOSE 80
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
