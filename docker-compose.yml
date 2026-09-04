@@ -7,11 +7,13 @@ services:
 
   # ── 1. APP (PHP + Apache) ─────────────────────────────────
   #  Builds from our Dockerfile in the current folder (.)
-  #  Runs the website at http://localhost:8080
+  #  Tagged as vaibhavvv85/shopnest-app:latest
+  #  Runs the website at http://localhost:8082
   #  Reads all env vars (DB, AWS, APP_*) from the .env file
   #  Waits for the database to be healthy before starting
   app:
     build: .
+    image: vaibhavvv85/shopnest-app:latest
     container_name: shopnest_app
     restart: unless-stopped        # auto-restart if it crashes
     ports:
@@ -20,6 +22,9 @@ services:
     environment:
       DB_HOST: db                  # "db" = the service name below (auto DNS)
       DB_PORT: 3306
+      DB_USER: ${DB_USER:-shopnest}
+      DB_PASS: ${DB_PASS:-shopnest_pass}
+      DB_NAME: ${DB_NAME:-aws_ecommerce}
     volumes:
       - uploads_data:/var/www/html/uploads   # keep uploaded images after restart
       - logs_data:/var/www/html/logs         # keep log files after restart
@@ -41,6 +46,8 @@ services:
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       MYSQL_DATABASE: ${DB_NAME:-aws_ecommerce}
+      MYSQL_USER: ${DB_USER:-shopnest}
+      MYSQL_PASSWORD: ${DB_PASS:-shopnest_pass}
     ports:
       - "3307:3306"                          # host:container
     volumes:
@@ -66,8 +73,8 @@ services:
       - "8081:80"                  # visit localhost:8081
     environment:
       PMA_HOST: db                 # connect to the "db" service above
-      PMA_USER: root
-      PMA_PASSWORD: ""
+      PMA_USER: ${DB_USER:-shopnest}
+      PMA_PASSWORD: ${DB_PASS:-shopnest_pass}
     depends_on:
       db:
         condition: service_healthy

@@ -1,0 +1,10 @@
+.git
+.github
+.env
+tests
+vendor
+*.md
+*.log
+docker-compose*.yml
+Jenkinsfile
+phpstan.neon
