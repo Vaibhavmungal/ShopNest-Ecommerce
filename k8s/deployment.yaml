@@ -122,7 +122,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: vaibhavvv85/shopnest-app:latest
+          image: aws-ecommerce:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80

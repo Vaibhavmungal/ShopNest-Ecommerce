@@ -2,10 +2,9 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_USER = "vaibhavvv85"
-        IMAGE_NAME  = "shopnest-app"
-        IMAGE_TAG   = "${BUILD_NUMBER}"
-        K8S_FILE    = "k8s/deployment.yaml"
+        IMAGE_NAME = "aws-ecommerce"
+        IMAGE_TAG  = "${BUILD_NUMBER}"
+        K8S_FILE   = "k8s/deployment.yaml"
     }
 
     options {
@@ -29,12 +28,12 @@ pipeline {
 
         stage('Build & Push Docker Image') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'Docker', usernameVariable: 'DOCKER_USER_VAR', passwordVariable: 'DOCKER_PASS_VAR')]) {
+                withCredentials([usernamePassword(credentialsId: 'Docker', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh """
-                        echo "\$DOCKER_PASS_VAR" | docker login -u "\$DOCKER_USER_VAR" --password-stdin
-                        docker build -t ${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG} -t ${DOCKER_USER}/${IMAGE_NAME}:latest .
-                        docker push ${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}
-                        docker push ${DOCKER_USER}/${IMAGE_NAME}:latest
+                        echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
+                        docker build -t \$DOCKER_USER/${IMAGE_NAME}:${IMAGE_TAG} -t \$DOCKER_USER/${IMAGE_NAME}:latest .
+                        docker push \$DOCKER_USER/${IMAGE_NAME}:${IMAGE_TAG}
+                        docker push \$DOCKER_USER/${IMAGE_NAME}:latest
                         docker logout
                     """
                 }
@@ -43,11 +42,13 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh """
-                    kubectl apply -f ${K8S_FILE}
-                    kubectl set image deployment/ecommerce-app web=${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}
-                    kubectl rollout status deployment/ecommerce-app --timeout=120s
-                """
+                withCredentials([usernamePassword(credentialsId: 'Docker', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh """
+                        kubectl apply -f ${K8S_FILE}
+                        kubectl set image deployment/ecommerce-app web=\$DOCKER_USER/${IMAGE_NAME}:${IMAGE_TAG}
+                        kubectl rollout status deployment/ecommerce-app --timeout=120s
+                    """
+                }
             }
         }
     }
