@@ -1,78 +1,90 @@
-# 🛍️ ShopNest E-Commerce — Kubernetes Deployment Guide
+# 🛍️ ShopNest — Kubernetes E-Commerce Platform
 
-> A containerized PHP 8.2 & MySQL 8.0 e-commerce platform designed exclusively for **Kubernetes (k8s)** deployment with an automated **Jenkins CI/CD** pipeline.
-
----
-
-## 🎨 System Architecture
-
-![ShopNest Kubernetes Architecture](assets/images/architecture-diagram.jpg)
+> A containerized e-commerce application built with **PHP 8.2** and **MySQL 8.0**, deployed on **Kubernetes (k8s)** using an automated **Jenkins CI/CD Pipeline**.
 
 ---
 
-## 📋 Required Software & Tool Versions
+## 🎨 Architecture Diagram
+
+![Kubernetes Architecture Diagram](assets/images/architecture-diagram.jpg)
+
+---
+
+## 🛠️ Tools & Technologies Used
+
+- **Application & Runtime:** PHP 8.2 (Apache 2.4 web server)
+- **Database:** MySQL 8.0 (Persistent volume storage via PVC)
+- **Containerization:** Docker & Docker Hub
+- **Orchestration:** Kubernetes (`kubectl`, ConfigMap, Secret, PVC, Deployments, Services)
+- **CI/CD Automation:** Jenkins (Declarative Pipeline)
+- **Version Control:** Git & GitHub
+
+---
+
+## 📋 Required Software & Versions
 
 | Tool / Software | Required Version | Purpose |
 |---|---|---|
-| **Kubernetes (k8s)** | `v1.24+` | Container Orchestration Cluster (Minikube / EKS / GKE / AKS) |
-| **kubectl** | `v1.24+` | Kubernetes Command-Line Tool |
-| **Docker** | `v20.10+` | Container Runtime & Image Builder |
-| **PHP** | `v8.2+` | Web Application Core Engine |
-| **MySQL** | `v8.0+` | Database Engine |
-| **Jenkins** | `v2.400+` | CI/CD Automation Server |
+| **Kubernetes (`kubectl`)** | `v1.24+` | Container orchestration and deployment management |
+| **Docker Engine** | `20.10+` | Container image building and execution |
+| **Jenkins Server** | `2.400+` | CI/CD automation pipeline agent |
+| **PHP** | `8.2+` | Syntax linting and application core runtime |
+| **MySQL** | `8.0+` | Database engine for e-commerce store |
 
 ---
 
-## ☸️ Kubernetes Deployment Steps
+## 🚀 Deployment Steps (Kubernetes)
 
-All Kubernetes resources (ConfigMap, Secret, PVC, MySQL Deployment/Service, and Web App Deployment/Service) are defined in a single manifest: `k8s/deployment.yaml`.
+### 1. Prerequisites Checklist
+- A running Kubernetes cluster (Minikube / EKS / AKS / GKE / Kind).
+- `kubectl` CLI installed and configured (`~/.kube/config`).
 
-### Step 1: Deploy Manifest to Kubernetes Cluster
+### 2. Deploy via Manifest
+
+Apply the unified Kubernetes deployment manifest:
+
 ```bash
 kubectl apply -f k8s/deployment.yaml
 ```
 
-### Step 2: Verify All Resources
+### 3. Verify Deployment & Resources
+
+Check the status of created pods, services, PVCs, ConfigMaps, and Secrets:
+
 ```bash
 kubectl get pods,svc,pvc,configmap,secret
 ```
 
-### Step 3: Monitor Deployment Rollout
+Wait until all pods (`mysql` and `ecommerce-app`) show `Running` status:
+
 ```bash
 kubectl rollout status deployment/ecommerce-app --timeout=120s
 ```
 
-### Step 4: Access Application Service
+### 4. Access the Storefront
+
+Get the external IP / Port for the LoadBalancer service:
+
 ```bash
-# Get the external IP or NodePort of the ecommerce-service
-kubectl get svc ecommerce-service
+kubectl get service ecommerce-service
 ```
+
+Open `http://<EXTERNAL-IP-OR-NODE-IP>:80` in your web browser.
 
 ---
 
 ## 🔑 Default Login Credentials
 
-Deploy and instantly log in using pre-configured database seed accounts:
-
 | Role | Email | Password |
 |---|---|---|
 | **Admin Panel** | `admin@shopnest.com` | `Admin@1234` |
-| **Customer Storefront** | `rahul@example.com` | `Customer@123` |
+| **Customer Account** | `rahul@example.com` | `Customer@123` |
 
 ---
 
-## 🚀 Jenkins CI/CD Pipeline Workflow
+## ⚙️ Jenkins CI/CD Pipeline Flow
 
-The project includes an automated declarative `Jenkinsfile` with the following stages:
-
-1. **PHP Lint**: Validates PHP syntax across all project source files.
-2. **Build Docker Image**: Builds Docker image tagged with `${BUILD_NUMBER}` and `latest`.
-3. **Push Docker Image**: Authenticates with Docker Hub using Jenkins credentials (`Docker`) and pushes the image.
-4. **Deploy to Kubernetes**: Applies `k8s/deployment.yaml`, sets the new container image, and verifies rollout health.
-
----
-
-## 📜 License & Author
-
-- **License**: MIT
-- **Repository**: [ShopNest-Ecommerce](https://github.com/Vaibhavmungal/ShopNest-Ecommerce)
+1. **PHP Lint Stage:** Scans PHP files for syntax errors using `php -l`.
+2. **Build Docker Image:** Builds `$DOCKER_USER/aws-ecommerce:${BUILD_NUMBER}` and `latest`.
+3. **Push Docker Image:** Authenticates to Docker Hub and pushes the generated image.
+4. **Deploy to Kubernetes:** Applies `k8s/deployment.yaml` and executes `kubectl set image` for zero-downtime rolling updates.
