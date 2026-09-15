@@ -47,9 +47,14 @@ The project uses a unified Kubernetes manifest file `k8s/deployment.yaml` that p
    # Wait for ecommerce-app deployment rollout
    kubectl rollout status deployment/ecommerce-app
 
-   # Access the application via LoadBalancer service
-   kubectl get svc ecommerce-service
-   ```
+### 🔑 Default Login Credentials
+
+Anyone can instantly deploy and log in with the following default accounts:
+
+| Role | Email | Password |
+|---|---|---|
+| **Admin** | `admin@shopnest.com` | `Admin@1234` |
+| **Customer** | `rahul@example.com` | `Customer@123` |
 
 ---
 
