@@ -26,12 +26,21 @@ pipeline {
             }
         }
 
-        stage('Build & Push Docker Image') {
+        stage('Build Docker Image') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'Docker', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh """
+                        docker build -t \$DOCKER_USER/${IMAGE_NAME}:${IMAGE_TAG} -t \$DOCKER_USER/${IMAGE_NAME}:latest .
+                    """
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'Docker', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh """
                         echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
-                        docker build -t \$DOCKER_USER/${IMAGE_NAME}:${IMAGE_TAG} -t \$DOCKER_USER/${IMAGE_NAME}:latest .
                         docker push \$DOCKER_USER/${IMAGE_NAME}:${IMAGE_TAG}
                         docker push \$DOCKER_USER/${IMAGE_NAME}:latest
                         docker logout
