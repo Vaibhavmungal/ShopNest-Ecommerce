@@ -1,44 +1,55 @@
-# 🛍️ ShopNest — PHP E-Commerce Platform
+# 🛍️ ShopNest — PHP E-Commerce Platform (Kubernetes Ready)
 
 > A full-featured, modern e-commerce web application built with PHP 8.2, MySQL 8, and Bootstrap 5.3.
-> Includes a complete customer-facing storefront, a powerful admin panel, Docker support, and a
-> GitHub Actions CI/CD pipeline using Composer and PHP-native tools.
+> Designed for containerized deployment on **Kubernetes (k8s)** with an automated Jenkins CI/CD pipeline.
 
 [![CI/CD Pipeline](https://github.com/Vaibhavmungal/ShopNest-Ecommerce/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Vaibhavmungal/ShopNest-Ecommerce/actions/workflows/ci-cd.yml)
 [![PHP](https://img.shields.io/badge/PHP-8.2-777BB4?logo=php&logoColor=white)](https://www.php.net/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)
-[![Composer](https://img.shields.io/badge/Composer-2.x-885630?logo=composer&logoColor=white)](https://getcomposer.org/)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-k8s-326CE5?logo=kubernetes&logoColor=white)](https://kubernetes.io/)
+[![Docker](https://img.shields.io/badge/Docker-Container-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](LICENSE)
 
 ---
 
 ## 📋 Table of Contents
 
+- [Kubernetes Deployment (k8s)](#-kubernetes-deployment-k8s)
 - [Prerequisites & Service Installation (Linux)](#-prerequisites--service-installation-linux)
-  - [Git](#1--git)
-  - [PHP 8.2](#2--php-82--required-extensions)
-  - [MySQL 8.0](#3--mysql-80)
-  - [Apache 2.4](#4--apache-24)
-  - [Composer 2.x](#5--composer-2x)
-  - [Docker & Docker Compose](#6--docker--docker-compose)
-  - [Jenkins](#7--jenkins-self-hosted-cicd)
 - [Features](#-features)
 - [Tech Stack & Versions](#️-tech-stack--versions)
 - [Project Structure](#-project-structure)
-- [Getting Started](#-getting-started)
-  - [Option A — Local (XAMPP)](#option-a--local-xampp)
-  - [Option B — Docker Compose](#option-b--docker-compose)
-- [Environment Variables](#-environment-variables)
 - [CI/CD Pipeline](#-cicd-pipeline)
-  - [How the Pipeline Works](#how-the-pipeline-works)
-  - [Setting Up the Workflow](#setting-up-the-workflow)
-  - [Running Checks Locally](#running-checks-locally)
 - [Admin Access](#-admin-access)
-- [Key Pages](#-key-pages)
-- [Contributing](#-contributing)
 - [License](#-license)
 - [Author](#-author)
+
+---
+
+## ☸️ Kubernetes Deployment (k8s)
+
+The project uses a unified Kubernetes manifest file `k8s/deployment.yaml` that provisions all required resources (ConfigMap, Secret, PVC, MySQL Deployment & Service, Ecommerce App Deployment & Service).
+
+### Deployment Steps
+
+1. **Deploy to Kubernetes Cluster:**
+   ```bash
+   kubectl apply -f k8s/deployment.yaml
+   ```
+
+2. **Verify Resources:**
+   ```bash
+   kubectl get pods,svc,pvc,configmap,secret
+   ```
+
+3. **Check Application Status & Access:**
+   ```bash
+   # Wait for ecommerce-app deployment rollout
+   kubectl rollout status deployment/ecommerce-app
+
+   # Access the application via LoadBalancer service
+   kubectl get svc ecommerce-service
+   ```
 
 ---
 

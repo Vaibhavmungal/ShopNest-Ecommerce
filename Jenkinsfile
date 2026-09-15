@@ -1,42 +1,34 @@
 // ============================================================
 //  Jenkinsfile — ShopNest E-Commerce
-//  Declarative Pipeline: Lint → Build → Deploy via Docker Compose
+//  Declarative Pipeline: Lint → Build → Push → Deploy to Kubernetes
 //
 //  REQUIREMENTS on Jenkins server:
-//    - Docker + Docker Compose installed
-//    - Jenkins user in the "docker" group
-//    - GitHub credentials stored as: github-credentials
-//    - .env file for production stored as:  shopnest-env-file  (Secret File)
-//    - MYSQL_ROOT_PASSWORD stored as:       shopnest-db-root-pass (Secret Text)
+//    - Docker + kubectl installed (Jenkins user in "docker" group)
+//    - Docker Hub credentials stored as: Docker (username & password)
+//    - Kubernetes cluster access configured (~/.kube/config)
 // ============================================================
 
 pipeline {
 
-    // Run on any available Jenkins agent that has Docker installed
     agent any
 
     // ── ENVIRONMENT VARIABLES ─────────────────────────────────
     environment {
+        DOCKER_USER   = "vaibhavvv85"
         IMAGE_NAME    = "shopnest-app"
-        IMAGE_TAG     = "${BUILD_NUMBER}"          // e.g. shopnest-app:42
-        CONTAINER_APP = "shopnest_app"
-        CONTAINER_DB  = "shopnest_db"
-        COMPOSE_FILE  = "docker-compose.yml"
-        REPO_URL      = "https://github.com/Vaibhavmungal/ShopNest-Ecommerce.git"
-        BRANCH        = "main"
+        IMAGE_TAG     = "${BUILD_NUMBER}"
+        K8S_DIR       = "k8s"
+        K8S_NAMESPACE = "shopnest"
     }
 
     // ── BUILD OPTIONS ─────────────────────────────────────────
     options {
-        buildDiscarder(logRotator(numToKeepStr: '10'))   // keep last 10 builds
-        timeout(time: 30, unit: 'MINUTES')               // fail if build hangs
-        disableConcurrentBuilds()                        // one build at a time
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timeout(time: 30, unit: 'MINUTES')
+        disableConcurrentBuilds()
     }
 
     // ── TRIGGERS ─────────────────────────────────────────────
-    // Triggered automatically by GitHub Webhook on push events.
-    // Ensure you have configured a webhook in your GitHub repository settings pointing to:
-    //   http://<jenkins-server>:8080/github-webhook/
     triggers {
         githubPush()
     }
@@ -44,20 +36,17 @@ pipeline {
     stages {
 
         // ── STAGE 1: CHECKOUT ─────────────────────────────────
-        stage('Stage 1: Git Checkout') {
+        stage('Stage 1: Checkout') {
             steps {
                 echo "📥 Checking out repository..."
-                git branch: "${BRANCH}",
-                    credentialsId: 'github-credentials',
-                    url: "${REPO_URL}"
-                echo "✅ Checkout complete. Build #${BUILD_NUMBER}"
+                checkout scm
             }
         }
 
-        // ── STAGE 2: PHP SYNTAX LINT ──────────────────────────
-        stage('Stage 2: PHP ENV Check') {
+        // ── STAGE 2: PHP LINT ─────────────────────────────────
+        stage('Stage 2: PHP Lint') {
             steps {
-                echo "🔍 Running PHP syntax check on all .php files..."
+                echo "🔍 Running PHP syntax check..."
                 sh '''#!/bin/bash
                     which php || { echo "❌ PHP not found on agent. Install PHP 8.2."; exit 1; }
                     php --version
@@ -83,115 +72,71 @@ pipeline {
         // ── STAGE 3: BUILD DOCKER IMAGE ───────────────────────
         stage('Stage 3: Build Docker Image') {
             steps {
-                echo "🐳 Building Docker image: ${IMAGE_NAME}:${IMAGE_TAG}..."
-                sh '''
+                echo "🐳 Building Docker image: ${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}..."
+                sh """
                     docker build \
-                        --tag ${IMAGE_NAME}:${IMAGE_TAG} \
-                        --tag ${IMAGE_NAME}:latest \
-                        --no-cache \
+                        --tag ${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG} \
+                        --tag ${DOCKER_USER}/${IMAGE_NAME}:latest \
                         --file Dockerfile \
                         .
-                    echo "✅ Docker image built: ${IMAGE_NAME}:${IMAGE_TAG}"
-                    docker image ls | grep ${IMAGE_NAME}
-                '''
+                    echo "✅ Docker image built successfully."
+                """
             }
         }
 
-        // ── STAGE 4: PUSH TO DOCKER HUB ─────────────────────────
+        // ── STAGE 4: PUSH TO DOCKER HUB ───────────────────────
         stage('Stage 4: Push to Docker Hub') {
             steps {
                 echo "🐳 Pushing Docker image to Docker Hub..."
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'Docker', 
-                                                     usernameVariable: 'DOCKER_USER', 
-                                                     passwordVariable: 'DOCKER_PASS')]) {
-                        sh '''
-                            echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
-                            docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}
-                            docker tag ${IMAGE_NAME}:latest ${DOCKER_USER}/${IMAGE_NAME}:latest
-                            docker push ${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}
-                            docker push ${DOCKER_USER}/${IMAGE_NAME}:latest
-                            docker logout
-                        '''
-                    }
-                    echo "✅ Docker image pushed successfully!"
+                withCredentials([usernamePassword(credentialsId: 'Docker', 
+                                                 usernameVariable: 'DOCKER_HUB_USER', 
+                                                 passwordVariable: 'DOCKER_HUB_PASS')]) {
+                    sh """
+                        echo "\$DOCKER_HUB_PASS" | docker login -u "\$DOCKER_HUB_USER" --password-stdin
+                        docker push ${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}
+                        docker push ${DOCKER_USER}/${IMAGE_NAME}:latest
+                        docker logout
+                        echo "✅ Docker image pushed successfully!"
+                    """
                 }
             }
         }
 
-        // ── STAGE 5: SETUP .ENV FILE ──────────────────────────
-        // For testing, uses .env.example if secret credentials are not set
-        stage('Stage 5: Setup Environment') {
+        // ── STAGE 5: DEPLOY TO KUBERNETES ─────────────────────
+        stage('Stage 5: Deploy to Kubernetes') {
             steps {
-                echo "⚙️ Preparing .env configuration..."
-                script {
-                    try {
-                        withCredentials([file(credentialsId: 'shopnest-env-file', variable: 'ENV_FILE')]) {
-                            sh 'cp "$ENV_FILE" .env'
-                            echo "✅ Using production .env from Jenkins credentials."
-                        }
-                    } catch (Exception e) {
-                        echo "⚠️ No Jenkins secret credential found ('shopnest-env-file'). Falling back to .env.example for testing."
-                        sh 'cp .env.example .env'
-                        echo "✅ Created .env from .env.example."
-                    }
-                }
+                echo "🚀 Deploying to Kubernetes cluster..."
+                sh """
+                    # Apply Kubernetes manifest
+                    kubectl apply -f ${K8S_DIR}/deployment.yaml
+
+                    # Update deployment to use the newly built image tag
+                    kubectl set image deployment/ecommerce-app web=${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}
+
+                    echo "✅ Manifests applied and image updated."
+                """
             }
         }
 
-        // ── STAGE 6: DEPLOY WITH DOCKER COMPOSE ───────────────
-        stage('Stage 6: Deploy') {
+        // ── STAGE 6: HEALTH CHECK & ROLLOUT ───────────────────
+        stage('Stage 6: Health Check') {
             steps {
-                echo "🚀 Deploying ShopNest with Docker Compose..."
-                sh '''
-                    # Pull any updated base images (mysql, phpmyadmin)
-                    docker compose -f ${COMPOSE_FILE} pull db phpmyadmin || true
+                echo "🏥 Verifying deployment rollout..."
+                sh """
+                    # Wait for app deployment rollout to complete successfully
+                    kubectl rollout status deployment/ecommerce-app --timeout=120s
 
-                    # Update the app image tag in docker-compose for this build
-                    # Rebuild & restart only the app service (zero-downtime swap)
-                    docker compose -f ${COMPOSE_FILE} up -d --build --remove-orphans
-
-                    echo "✅ Deployment complete."
-                    docker compose -f ${COMPOSE_FILE} ps
-                '''
+                    echo "✅ Deployment is healthy and running!"
+                    kubectl get pods,svc -n ${K8S_NAMESPACE} -o wide
+                """
             }
         }
 
-        // ── STAGE 7: HEALTH CHECK ─────────────────────────────
-        stage('Stage 7: Health Check') {
+        // ── STAGE 7: CLEANUP ──────────────────────────────────
+        stage('Stage 7: Cleanup') {
             steps {
-                echo "🏥 Waiting for containers to become healthy..."
-                sh '''
-                    # Wait up to 90 seconds for the app container to be running
-                    TIMEOUT=90
-                    ELAPSED=0
-                    until docker inspect --format="{{.State.Status}}" ${CONTAINER_APP} 2>/dev/null | grep -q "running"; do
-                        sleep 5
-                        ELAPSED=$((ELAPSED + 5))
-                        if [ $ELAPSED -ge $TIMEOUT ]; then
-                            echo "❌ Timed out waiting for ${CONTAINER_APP} to start."
-                            docker compose -f ${COMPOSE_FILE} logs app
-                            exit 1
-                        fi
-                        echo "⏳ Waiting for app container... (${ELAPSED}s)"
-                    done
-
-                    echo "✅ App container is running."
-                    docker compose -f ${COMPOSE_FILE} ps
-                    docker compose -f ${COMPOSE_FILE} logs --tail=20 app
-                '''
-            }
-        }
-
-        // ── STAGE 8: CLEANUP OLD IMAGES ───────────────────────
-        stage('Stage 8: Cleanup') {
-            steps {
-                echo "🧹 Removing dangling Docker images to free disk space..."
-                sh '''
-                    docker image prune -f || true
-                    echo "✅ Cleanup done."
-                    docker image ls | grep ${IMAGE_NAME} || true
-                '''
+                echo "🧹 Cleaning up dangling Docker images..."
+                sh 'docker image prune -f || true'
             }
         }
     }
@@ -203,8 +148,8 @@ pipeline {
             echo """
             ╔══════════════════════════════════════════╗
             ║  ✅  BUILD #${BUILD_NUMBER} SUCCEEDED      ║
-            ║  ShopNest deployed successfully!         ║
-            ║  http://<your-server-ip>:8082            ║
+            ║  ShopNest deployed to Kubernetes!        ║
+            ║  Store URL: http://<node-ip>:30082       ║
             ╚══════════════════════════════════════════╝
             """
         }
@@ -216,14 +161,14 @@ pipeline {
             ║  Check the console output above.         ║
             ╚══════════════════════════════════════════╝
             """
-            // Print last 50 lines of app logs to help debug
-            sh 'docker compose -f ${COMPOSE_FILE} logs --tail=50 app || true'
+            sh """
+                kubectl describe pods -l app=ecommerce-web || true
+                kubectl logs -l app=ecommerce-web --tail=50 || true
+            """
         }
 
         always {
-            echo "🔚 Pipeline finished. Cleaning up workspace files..."
-            // Remove the .env file from the workspace after each run (security)
-            sh 'rm -f .env || true'
+            echo "🔚 Pipeline finished."
         }
     }
 }
