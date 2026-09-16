@@ -58,6 +58,10 @@ spec:
       containers:
         - name: mysql
           image: mysql:8.0
+          args:
+            - "--default-authentication-plugin=mysql_native_password"
+            - "--character-set-server=utf8mb4"
+            - "--collation-server=utf8mb4_unicode_ci"
           ports:
             - containerPort: 3306
               name: mysql
@@ -84,9 +88,36 @@ spec:
                 secretKeyRef:
                   name: shopnest-secret
                   key: DB_PASSWORD
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
           volumeMounts:
             - name: mysql-storage
               mountPath: /var/lib/mysql
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - "mysqladmin ping -h 127.0.0.1 -u root -p\"$MYSQL_ROOT_PASSWORD\""
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - "mysqladmin ping -h 127.0.0.1 -u root -p\"$MYSQL_ROOT_PASSWORD\""
+            initialDelaySeconds: 45
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
       volumes:
         - name: mysql-storage
           persistentVolumeClaim:
@@ -115,6 +146,11 @@ metadata:
     app: ecommerce-web
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
   selector:
     matchLabels:
       app: ecommerce-web
@@ -125,8 +161,8 @@ spec:
     spec:
       containers:
         - name: web
-          image: aws-ecommerce:latest
-          imagePullPolicy: IfNotPresent
+          image: vaibhavvv85/aws-ecommerce:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
               name: http
@@ -146,18 +182,18 @@ spec:
             httpGet:
               path: /
               port: 80
-            initialDelaySeconds: 10
+            initialDelaySeconds: 25
             periodSeconds: 10
             timeoutSeconds: 5
-            failureThreshold: 3
+            failureThreshold: 6
           livenessProbe:
             httpGet:
               path: /
               port: 80
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             periodSeconds: 20
             timeoutSeconds: 5
-            failureThreshold: 3
+            failureThreshold: 5
 ---
 apiVersion: v1
 kind: Service

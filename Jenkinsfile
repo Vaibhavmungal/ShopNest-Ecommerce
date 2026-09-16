@@ -55,7 +55,7 @@ pipeline {
                     sh """
                         kubectl apply -f ${K8S_FILE}
                         kubectl set image deployment/ecommerce-app web=\$DOCKER_USER/${IMAGE_NAME}:${IMAGE_TAG}
-                        kubectl rollout status deployment/ecommerce-app --timeout=120s
+                        kubectl rollout status deployment/ecommerce-app --timeout=180s
                     """
                 }
             }
@@ -67,6 +67,10 @@ pipeline {
             sh """
                 kubectl describe pods -l app=ecommerce-web || true
                 kubectl logs -l app=ecommerce-web --tail=50 || true
+                kubectl describe pods -l app=mysql || true
+                kubectl logs -l app=mysql --tail=50 || true
+                kubectl get pvc || true
+                kubectl get svc || true
             """
         }
         always {
