@@ -175,16 +175,23 @@ kubectl rollout status deployment/ecommerce-app --timeout=120s
 
 ### 4. Access Application
 
-```bash
-kubectl get service ecommerce-service
-```
-Access the storefront via `http://<EXTERNAL-IP-OR-NODE-IP>:80`.
+- **Via NodePort (Direct Access):**
+  ```bash
+  kubectl get nodes -o wide
+  ```
+  Access the storefront directly in your browser: `http://<NODE-EXTERNAL-IP>:30080`
+
+- **Via LoadBalancer Service:**
+  ```bash
+  kubectl get service ecommerce-service
+  ```
+  Access the storefront via `http://<EXTERNAL-IP-OR-NODE-IP>:80`.
 
 ---
 
-## 🔑 Jenkins Credentials Setup Guide
+## 🔑 Jenkins Credentials & Permissions Setup Guide
 
-To run the Jenkins pipeline successfully, configure your Docker Hub credentials in Jenkins:
+To run the Jenkins pipeline successfully and allow deployment to AWS EKS:
 
 ### 1. 🐳 Docker Hub Credentials Setup
 1. Open Jenkins ➔ **Manage Jenkins** ➔ **Credentials** ➔ **System** ➔ **Global credentials (unrestricted)**.
@@ -196,6 +203,17 @@ To run the Jenkins pipeline successfully, configure your Docker Hub credentials 
    - **ID:** `Docker` *(Must be named exactly `Docker`)*
 4. Click **Create / Save**.
 
+### 2. 🔑 Grant Jenkins Permission for AWS EKS (`kubectl`)
+Execute these commands on your server so the Jenkins user can access the AWS EKS cluster:
+
+```bash
+sudo mkdir -p /var/lib/jenkins/.kube /var/lib/jenkins/.aws
+sudo cp /root/.kube/config /var/lib/jenkins/.kube/config
+sudo cp -r /root/.aws/* /var/lib/jenkins/.aws/ 2>/dev/null || true
+sudo chown -R jenkins:jenkins /var/lib/jenkins/.kube /var/lib/jenkins/.aws
+sudo chmod 600 /var/lib/jenkins/.kube/config
+```
+
 ---
 
 ## ⚙️ Jenkins Pipeline Flow
@@ -205,4 +223,4 @@ The [`Jenkinsfile`](Jenkinsfile) runs automated stages on every push:
 1. **PHP Lint:** Scans all `.php` files using `php -l`.
 2. **Build Docker Image:** Builds `$DOCKER_USER/aws-ecommerce:${BUILD_NUMBER}` and `latest`.
 3. **Push Docker Image:** Logs into Docker Hub using credentials and pushes both tags.
-4. **Deploy to Kubernetes:** Applies `k8s/deployment.yaml` and executes `kubectl set image deployment/ecommerce-app web=$DOCKER_USER/aws-ecommerce:${BUILD_NUMBER}`.
+4. **Deploy to Kubernetes:** Applies `k8s/deployment.yaml` (with `NodePort: 30080` and `emptyDir` MySQL storage for instant scheduling) and executes `kubectl set image deployment/ecommerce-app web=$DOCKER_USER/aws-ecommerce:${BUILD_NUMBER}`.
