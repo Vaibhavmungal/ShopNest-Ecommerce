@@ -182,6 +182,22 @@ Access the storefront via `http://<EXTERNAL-IP-OR-NODE-IP>:80`.
 
 ---
 
+## 🔑 Jenkins Credentials Setup Guide
+
+To run the Jenkins pipeline successfully, configure your Docker Hub credentials in Jenkins:
+
+### 1. 🐳 Docker Hub Credentials Setup
+1. Open Jenkins ➔ **Manage Jenkins** ➔ **Credentials** ➔ **System** ➔ **Global credentials (unrestricted)**.
+2. Click **+ Add Credentials**.
+3. Fill in the details:
+   - **Kind:** `Username with password`
+   - **Username:** `Your Docker Hub Username` (e.g. `vaibhavvv85`)
+   - **Password:** `Your Docker Hub Password / Personal Access Token`
+   - **ID:** `Docker` *(Must be named exactly `Docker`)*
+4. Click **Create / Save**.
+
+---
+
 ## ⚙️ Jenkins Pipeline Flow
 
 The [`Jenkinsfile`](Jenkinsfile) runs automated stages on every push:
