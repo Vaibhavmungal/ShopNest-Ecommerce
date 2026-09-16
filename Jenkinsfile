@@ -5,6 +5,8 @@ pipeline {
         IMAGE_NAME = "aws-ecommerce"
         IMAGE_TAG  = "${BUILD_NUMBER}"
         K8S_FILE   = "k8s/deployment.yaml"
+        EKS_CLUSTER = "shoping"
+        AWS_REGION  = "us-east-1"
     }
 
     options {
@@ -51,8 +53,12 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'Docker', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                withCredentials([
+                    usernamePassword(credentialsId: 'Docker', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS'),
+                    usernamePassword(credentialsId: 'aws-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
                     sh """
+                        aws eks update-kubeconfig --region ${AWS_REGION} --name ${EKS_CLUSTER}
                         kubectl apply -f ${K8S_FILE}
                         kubectl set image deployment/ecommerce-app web=\$DOCKER_USER/${IMAGE_NAME}:${IMAGE_TAG}
                         kubectl rollout status deployment/ecommerce-app --timeout=120s
@@ -64,10 +70,13 @@ pipeline {
 
     post {
         failure {
-            sh """
-                kubectl describe pods -l app=ecommerce-web || true
-                kubectl logs -l app=ecommerce-web --tail=50 || true
-            """
+            withCredentials([usernamePassword(credentialsId: 'aws-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                sh """
+                    aws eks update-kubeconfig --region ${AWS_REGION} --name ${EKS_CLUSTER} || true
+                    kubectl describe pods -l app=ecommerce-web || true
+                    kubectl logs -l app=ecommerce-web --tail=50 || true
+                """
+            }
         }
         always {
             sh 'docker image prune -f || true'
