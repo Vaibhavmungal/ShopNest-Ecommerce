@@ -146,10 +146,11 @@ metadata:
   labels:
     app.kubernetes.io/name: aws-ecommerce
 spec:
-  type: LoadBalancer
+  type: NodePort
   selector:
     app: ecommerce-web
   ports:
     - protocol: TCP
       port: 80
       targetPort: 80
+      nodePort: 30080
