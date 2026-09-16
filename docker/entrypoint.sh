@@ -79,7 +79,23 @@ if [ "$TARGET_DB_HOST" = "localhost" ] || [ "$TARGET_DB_HOST" = "127.0.0.1" ]; t
         echo "Database already initialized, skipping import."
     fi
 else
-    echo "External database configured (host: $TARGET_DB_HOST). Skipping embedded MySQL."
+    echo "External database configured (host: $TARGET_DB_HOST)."
+    echo "Checking and setting up schema on $TARGET_DB_HOST..."
+    REMOTE_USER="${DB_USER:-root}"
+    REMOTE_PASS="${DB_PASS:-${MYSQL_ROOT_PASSWORD:-}}"
+    REMOTE_DB="${DB_NAME:-aws_ecommerce}"
+    
+    until mysql -h "$TARGET_DB_HOST" -u "$REMOTE_USER" -p"$REMOTE_PASS" -e "SELECT 1;" >/dev/null 2>&1 || [ ${TRIES:-0} -ge 30 ]; do
+        echo "Waiting for remote MySQL database $TARGET_DB_HOST..."
+        sleep 2
+        TRIES=$((${TRIES:-0} + 1))
+    done
+    
+    if [ -f /var/www/html/database/ecommerce.sql ]; then
+        mysql -h "$TARGET_DB_HOST" -u "$REMOTE_USER" -p"$REMOTE_PASS" -e "CREATE DATABASE IF NOT EXISTS \`$REMOTE_DB\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>/dev/null || true
+        mysql -h "$TARGET_DB_HOST" -u "$REMOTE_USER" -p"$REMOTE_PASS" "$REMOTE_DB" < /var/www/html/database/ecommerce.sql 2>/dev/null || true
+        echo "Remote database schema initialized!"
+    fi
 fi
 
 mkdir -p /var/www/html/uploads /var/www/html/logs
