@@ -5,8 +5,9 @@
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ed?logo=docker&logoColor=white)](https://www.docker.com/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0-4479a1?logo=mysql&logoColor=white)](https://www.mysql.com/)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-Ready-326ce5?logo=kubernetes&logoColor=white)](k8s/)
+[![AWS CLI](https://img.shields.io/badge/AWS%20CLI-v2-232F3E?logo=amazon-aws&logoColor=white)](https://aws.amazon.com/cli/)
 
-ShopNest is a modern, responsive, and open-source PHP-based E-Commerce web application featuring a complete customer storefront, cart, checkout, order tracking, admin dashboard, and Kubernetes + Jenkins CI/CD deployment architecture.
+ShopNest is a modern, responsive, and open-source PHP-based E-Commerce web application featuring a complete customer storefront, cart, checkout, order tracking, admin dashboard, and Kubernetes + Jenkins CI/CD deployment architecture on AWS EKS.
 
 ### 🔑 Default Credentials (Seed Data)
 
@@ -29,6 +30,7 @@ Below are the recommended and minimum supported versions along with official dir
 
 | Category | Software / Tool | Recommended Version | Minimum Version | Official Download Link | Purpose in ShopNest |
 |---|---|---|---|---|---|
+| **Cloud Provider CLI** | **AWS CLI v2** | `v2.15+` | `v2.0+` | [Download AWS CLI](https://aws.amazon.com/cli/) | Connecting kubectl to AWS EKS cluster (`aws eks update-kubeconfig`) |
 | **Container Engine** | **Docker Engine / Desktop** | `25.0+` / `24.0+` | `20.10+` | [Download Docker](https://www.docker.com/products/docker-desktop/) | Packaging PHP app and isolated container runtime |
 | **CI/CD Server** | **Jenkins** | `2.426+` (LTS) | `2.400+` | [Download Jenkins](https://www.jenkins.io/download/) | CI/CD pipeline automation: PHP lint, image build/push, k8s rollout |
 | **Cloud Native** | **Kubernetes (k8s)** | `v1.28+` / `v1.29+` | `v1.24+` | [Download Minikube/K8s](https://kubernetes.io/docs/tasks/tools/) | Container pod scaling, self-healing, and rolling updates |
@@ -39,8 +41,8 @@ Below are the recommended and minimum supported versions along with official dir
 | **VCS** | **Git** | `2.40+` | `2.30+` | [Download Git](https://git-scm.com/downloads) | Source code versioning and repository management |
 
 > 💡 **Quick Install via Package Managers:**
-> - **Windows (Winget):** `winget install Docker.DockerDesktop Git.Git Kubernetes.kubectl`
-> - **macOS (Homebrew):** `brew install docker kubectl git php mysql`
+> - **Windows (Winget):** `winget install Amazon.AWSCLI Docker.DockerDesktop Git.Git Kubernetes.kubectl`
+> - **macOS (Homebrew):** `brew install awscli docker kubectl git php mysql`
 > - **Ubuntu / Debian (APT):** `sudo apt update && sudo apt install -y docker.io git php8.2 mysql-server`
 
 ---
@@ -124,11 +126,36 @@ sudo apt update && sudo apt install -y kubectl
 kubectl version --client
 ```
 
+### 8. ☁️ AWS CLI v2 Installation & EKS Cluster Connection
+
+> Required to authenticate `kubectl` with your AWS EKS cluster (`shoping`).
+
+```bash
+# Download and install AWS CLI v2
+sudo apt update && sudo apt install -y unzip curl
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip -q awscliv2.zip
+sudo ./aws/install --update
+rm -rf aws awscliv2.zip
+
+# Verify AWS CLI version
+aws --version
+
+# Connect kubectl to AWS EKS cluster (replace region/name if different)
+aws eks update-kubeconfig --region us-east-1 --name shoping
+```
+
 ---
 
 ## ☸️ Kubernetes Deployment Steps
 
-### 1. Apply Unified Kubernetes Manifest
+### 1. Connect to AWS EKS Cluster
+
+```bash
+aws eks update-kubeconfig --region us-east-1 --name shoping
+```
+
+### 2. Apply Unified Kubernetes Manifest
 
 Deploy all resources (ConfigMap, Secret, PVC, MySQL, App Deployment & LoadBalancer Service):
 
@@ -136,7 +163,7 @@ Deploy all resources (ConfigMap, Secret, PVC, MySQL, App Deployment & LoadBalanc
 kubectl apply -f k8s/deployment.yaml
 ```
 
-### 2. Verify Cluster Status & Rollout
+### 3. Verify Cluster Status & Rollout
 
 ```bash
 # Check all created resources
@@ -146,7 +173,7 @@ kubectl get pods,svc,pvc,configmap,secret
 kubectl rollout status deployment/ecommerce-app --timeout=120s
 ```
 
-### 3. Access Application
+### 4. Access Application
 
 ```bash
 kubectl get service ecommerce-service
