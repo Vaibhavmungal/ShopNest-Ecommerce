@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: ecommerce-config
+  name: shopnest-config
   labels:
     app.kubernetes.io/name: aws-ecommerce
 data:
@@ -13,7 +13,7 @@ data:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: ecommerce-secret
+  name: shopnest-secret
   labels:
     app.kubernetes.io/name: aws-ecommerce
 type: Opaque
@@ -64,22 +64,22 @@ spec:
             - name: MYSQL_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: ecommerce-secret
+                  name: shopnest-secret
                   key: MYSQL_ROOT_PASSWORD
             - name: MYSQL_DATABASE
               valueFrom:
                 configMapKeyRef:
-                  name: ecommerce-config
+                  name: shopnest-config
                   key: DB_NAME
             - name: MYSQL_USER
               valueFrom:
                 secretKeyRef:
-                  name: ecommerce-secret
+                  name: shopnest-secret
                   key: DB_USER
             - name: MYSQL_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: ecommerce-secret
+                  name: shopnest-secret
                   key: DB_PASSWORD
           volumeMounts:
             - name: mysql-storage
@@ -128,9 +128,9 @@ spec:
               name: http
           envFrom:
             - configMapRef:
-                name: ecommerce-config
+                name: shopnest-config
             - secretRef:
-                name: ecommerce-secret
+                name: shopnest-secret
           resources:
             requests:
               cpu: 100m
