@@ -30,6 +30,7 @@ metadata:
   labels:
     app.kubernetes.io/name: aws-ecommerce
 spec:
+  storageClassName: gp2
   accessModes:
     - ReadWriteOnce
   resources:
