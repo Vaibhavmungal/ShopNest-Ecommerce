@@ -54,6 +54,7 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'Docker', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh """
                         kubectl apply -f ${K8S_FILE}
+                        kubectl rollout status deployment/mysql --timeout=120s
                         kubectl set image deployment/ecommerce-app web=\$DOCKER_USER/${IMAGE_NAME}:${IMAGE_TAG}
                         kubectl rollout status deployment/ecommerce-app --timeout=180s
                     """
