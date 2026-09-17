@@ -49,6 +49,29 @@ function getDB(): PDO {
             try {
                 $pdo->exec("SET SESSION sql_mode = REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', '')");
             } catch (Throwable $e) {}
+
+            // Auto-initialize schema if tables are not yet present
+            try {
+                $tableCheck = $pdo->query("SHOW TABLES LIKE 'categories'")->fetch();
+                if (!$tableCheck) {
+                    $sqlFile = __DIR__ . '/../database/ecommerce.sql';
+                    if (file_exists($sqlFile)) {
+                        $rawSql = file_get_contents($sqlFile);
+                        $cleanSql = preg_replace('/CREATE\s+DATABASE[^;]+;/i', '', $rawSql);
+                        $cleanSql = preg_replace('/USE\s+[^;]+;/i', '', $cleanSql);
+                        $stmts = array_filter(array_map('trim', explode(';', $cleanSql)));
+                        foreach ($stmts as $stmt) {
+                            if (!empty($stmt)) {
+                                try {
+                                    $pdo->exec($stmt);
+                                } catch (Throwable $t) {}
+                            }
+                        }
+                    }
+                }
+            } catch (Throwable $initEx) {
+                error_log("Database schema auto-init warning: " . $initEx->getMessage());
+            }
         } catch (PDOException $e) {
             http_response_code(500);
             $isApi = str_contains($_SERVER['REQUEST_URI'] ?? '', '/api/');

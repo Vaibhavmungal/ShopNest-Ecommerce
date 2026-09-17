@@ -53,7 +53,6 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'Docker', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh """
-                        kubectl patch pv mysql-pv -p '{"spec":{"claimRef": null}}' || true
                         kubectl apply -f ${K8S_FILE}
                         kubectl set image deployment/ecommerce-app web=\$DOCKER_USER/${IMAGE_NAME}:${IMAGE_TAG}
                         kubectl rollout status deployment/ecommerce-app --timeout=180s

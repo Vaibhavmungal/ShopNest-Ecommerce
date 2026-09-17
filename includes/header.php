@@ -4,8 +4,13 @@ header('Content-Type: text/html; charset=UTF-8');
 require_once __DIR__ . '/functions.php';
 $cartCount  = isLoggedIn() ? getCartCount() : 0;
 $user       = currentUser();
-$pdo        = getDB();
-$categories = $pdo->query("SELECT id,name,slug FROM categories WHERE status=1 ORDER BY sort_order")->fetchAll();
+$categories = [];
+try {
+    $pdo = getDB();
+    $categories = $pdo->query("SELECT id,name,slug FROM categories WHERE status=1 ORDER BY sort_order")->fetchAll();
+} catch (Throwable $e) {
+    error_log("Header categories query notice: " . $e->getMessage());
+}
 $flash      = getFlash();
 ?>
 <!DOCTYPE html>
