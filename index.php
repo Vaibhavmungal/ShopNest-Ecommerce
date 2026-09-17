@@ -4,46 +4,55 @@ define('PAGE_TITLE', 'Home');
 define('META_DESC', 'ShopNest — Discover premium products at unbeatable prices. Electronics, Fashion, Home & more.');
 require_once __DIR__ . '/includes/functions.php';
 
-$pdo = getDB();
+$featured = [];
+$cats = [];
+$newArrivals = [];
+$wishlistIds = [];
 
-// Featured Products
-$featured = $pdo->query("
-    SELECT p.*, c.name AS cat_name, c.slug AS cat_slug,
-           COALESCE(AVG(r.rating),0) AS avg_rating,
-           COUNT(r.id) AS review_count
-    FROM products p
-    LEFT JOIN categories c ON c.id = p.category_id
-    LEFT JOIN reviews r ON r.product_id = p.id AND r.status='approved'
-    WHERE p.status=1 AND p.is_featured=1
-    GROUP BY p.id
-    ORDER BY p.created_at DESC
-    LIMIT 8
-")->fetchAll();
+try {
+    $pdo = getDB();
 
-// Categories with product count
-$cats = $pdo->query("
-    SELECT c.*, COUNT(p.id) AS product_count
-    FROM categories c
-    LEFT JOIN products p ON p.category_id=c.id AND p.status=1
-    WHERE c.status=1
-    GROUP BY c.id
-    ORDER BY c.sort_order
-")->fetchAll();
+    // Featured Products
+    $featured = $pdo->query("
+        SELECT p.*, c.name AS cat_name, c.slug AS cat_slug,
+               COALESCE(AVG(r.rating),0) AS avg_rating,
+               COUNT(r.id) AS review_count
+        FROM products p
+        LEFT JOIN categories c ON c.id = p.category_id
+        LEFT JOIN reviews r ON r.product_id = p.id AND r.status='approved'
+        WHERE p.status=1 AND p.is_featured=1
+        GROUP BY p.id, c.name, c.slug
+        ORDER BY p.created_at DESC
+        LIMIT 8
+    ")->fetchAll();
 
-// New arrivals
-$newArrivals = $pdo->query("
-    SELECT p.*, c.name AS cat_name,
-           COALESCE(AVG(r.rating),0) AS avg_rating
-    FROM products p
-    LEFT JOIN categories c ON c.id=p.category_id
-    LEFT JOIN reviews r ON r.product_id=p.id AND r.status='approved'
-    WHERE p.status=1
-    GROUP BY p.id
-    ORDER BY p.created_at DESC
-    LIMIT 4
-")->fetchAll();
+    // Categories with product count
+    $cats = $pdo->query("
+        SELECT c.*, COUNT(p.id) AS product_count
+        FROM categories c
+        LEFT JOIN products p ON p.category_id=c.id AND p.status=1
+        WHERE c.status=1
+        GROUP BY c.id
+        ORDER BY c.sort_order
+    ")->fetchAll();
 
-$wishlistIds = getWishlistIds();
+    // New arrivals
+    $newArrivals = $pdo->query("
+        SELECT p.*, c.name AS cat_name,
+               COALESCE(AVG(r.rating),0) AS avg_rating
+        FROM products p
+        LEFT JOIN categories c ON c.id=p.category_id
+        LEFT JOIN reviews r ON r.product_id=p.id AND r.status='approved'
+        WHERE p.status=1
+        GROUP BY p.id, c.name
+        ORDER BY p.created_at DESC
+        LIMIT 4
+    ")->fetchAll();
+
+    $wishlistIds = getWishlistIds();
+} catch (Throwable $e) {
+    error_log("Index page query notice: " . $e->getMessage());
+}
 
 $catIcons = ['electronics'=>'🔌','fashion'=>'👗','home-kitchen'=>'🏠','sports-fitness'=>'🏋️','books'=>'📚','beauty'=>'💄'];
 

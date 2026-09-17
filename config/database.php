@@ -20,11 +20,17 @@ function loadEnv(string $path): void {
 
 loadEnv(__DIR__ . '/../.env');
 
-define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
-define('DB_USER', getenv('DB_USER') ?: 'root');
-define('DB_PASS', getenv('DB_PASS') ?: '');
-define('DB_NAME', getenv('DB_NAME') ?: 'aws_ecommerce');
-define('DB_PORT', getenv('DB_PORT') ?: '3306');
+function getEnvVal(string $key, string $default = ''): string {
+    $val = getenv($key);
+    if ($val !== false && $val !== '') return $val;
+    return $_ENV[$key] ?? ($_SERVER[$key] ?? $default);
+}
+
+define('DB_HOST', getEnvVal('DB_HOST', 'mysql-service'));
+define('DB_USER', getEnvVal('DB_USER', 'ecommerce_user'));
+define('DB_PASS', getEnvVal('DB_PASS', getEnvVal('DB_PASSWORD', 'YourStrongPassword123!')));
+define('DB_NAME', getEnvVal('DB_NAME', 'aws_ecommerce'));
+define('DB_PORT', getEnvVal('DB_PORT', '3306'));
 
 // Singleton PDO connection
 function getDB(): PDO {
@@ -40,7 +46,9 @@ function getDB(): PDO {
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES   => false,
             ]);
-            $pdo->exec("SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));");
+            try {
+                $pdo->exec("SET SESSION sql_mode = REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', '')");
+            } catch (Throwable $e) {}
         } catch (PDOException $e) {
             http_response_code(500);
             $isApi = str_contains($_SERVER['REQUEST_URI'] ?? '', '/api/');
