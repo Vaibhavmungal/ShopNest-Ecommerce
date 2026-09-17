@@ -205,3 +205,31 @@ spec:
       port: 80
       targetPort: 80
       nodePort: 30080
+
+# ============================================================
+#  ShopNest Deployment & Access Quick Reference
+# ============================================================
+#
+# 1. Local Kubernetes (Docker Desktop / Minikube / K3s / Kind):
+#    - Apply manifests:
+#        kubectl apply -f k8s/deployment.yaml
+#    - Access on Docker Desktop:
+#        http://localhost:30080/   or   http://localhost:80/
+#    - Access on Minikube:
+#        minikube service ecommerce-service
+#        (or run: minikube tunnel)
+#    - Health check:
+#        http://localhost:30080/health.php
+#
+# 2. AWS EKS Production:
+#    - AWS LoadBalancer: http://<aws-elb-dns>/
+#    - Direct NodePort:  http://<worker-node-public-ip>:30080/
+#
+# 3. Demo Credentials:
+#    - Admin Login:    admin@shopnest.com    / Admin@123
+#    - Customer Login: customer@shopnest.com / Customer@123
+#
+# 4. Storage & Network:
+#    - MySQL Storage: hostPath -> /var/data/shopnest-mysql
+#    - Internal DB Host: mysql-service:3306
+# ============================================================
