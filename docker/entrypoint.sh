@@ -101,12 +101,18 @@ else
         mysql -h "$TARGET_DB_HOST" -u "$REMOTE_USER" -p"$REMOTE_PASS" -e "SELECT 1;" || true
     else
         echo "Connected to MySQL database $TARGET_DB_HOST successfully!"
+        ROOT_PASS="${MYSQL_ROOT_PASSWORD:-$REMOTE_PASS}"
         if [ -f /var/www/html/database/ecommerce.sql ]; then
-            TABLE_COUNT=$(mysql -h "$TARGET_DB_HOST" -u "$REMOTE_USER" -p"$REMOTE_PASS" -D "$REMOTE_DB" -sse "SELECT count(*) FROM information_schema.tables WHERE table_schema='$REMOTE_DB';" 2>/dev/null || echo "0")
+            # Grant full privileges to application user on remote database
+            mysql -h "$TARGET_DB_HOST" -u root -p"$ROOT_PASS" -e "GRANT ALL PRIVILEGES ON \`$REMOTE_DB\`.* TO '$REMOTE_USER'@'%'; FLUSH PRIVILEGES;" 2>/dev/null || true
+            
+            TABLE_COUNT=$(mysql -h "$TARGET_DB_HOST" -u root -p"$ROOT_PASS" -D "$REMOTE_DB" -sse "SELECT count(*) FROM information_schema.tables WHERE table_schema='$REMOTE_DB';" 2>/dev/null || \
+                          mysql -h "$TARGET_DB_HOST" -u "$REMOTE_USER" -p"$REMOTE_PASS" -D "$REMOTE_DB" -sse "SELECT count(*) FROM information_schema.tables WHERE table_schema='$REMOTE_DB';" 2>/dev/null || echo "0")
+            
             if [ "$TABLE_COUNT" -eq "0" ] 2>/dev/null || [ -z "$TABLE_COUNT" ]; then
                 echo "Database '$REMOTE_DB' is empty. Initializing schema from database/ecommerce.sql..."
-                mysql -h "$TARGET_DB_HOST" -u "$REMOTE_USER" -p"$REMOTE_PASS" "$REMOTE_DB" < /var/www/html/database/ecommerce.sql 2>/dev/null || \
-                mysql -h "$TARGET_DB_HOST" -u root -p"${MYSQL_ROOT_PASSWORD:-$REMOTE_PASS}" "$REMOTE_DB" < /var/www/html/database/ecommerce.sql 2>/dev/null || true
+                mysql -h "$TARGET_DB_HOST" -u root -p"$ROOT_PASS" < /var/www/html/database/ecommerce.sql 2>/dev/null || \
+                mysql -h "$TARGET_DB_HOST" -u "$REMOTE_USER" -p"$REMOTE_PASS" "$REMOTE_DB" < /var/www/html/database/ecommerce.sql 2>/dev/null || true
                 echo "Remote database schema initialized!"
             else
                 echo "Database '$REMOTE_DB' already contains $TABLE_COUNT tables. Skipping schema import."
