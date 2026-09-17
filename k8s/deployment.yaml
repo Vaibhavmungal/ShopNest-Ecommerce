@@ -1,3 +1,8 @@
+# ============================================================
+# 1. ConfigMap — Non-Sensitive Application Configuration
+#    Stores environment variables like DB host, DB name, port,
+#    and environment mode shared across containers.
+# ============================================================
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -10,6 +15,11 @@ data:
   DB_NAME: "aws_ecommerce"
   DB_PORT: "3306"
 ---
+# ============================================================
+# 2. Secret — Sensitive Database & Root Credentials
+#    Stores encrypted/opaque passwords and usernames securely
+#    without exposing them in plaintext inside application code.
+# ============================================================
 apiVersion: v1
 kind: Secret
 metadata:
@@ -23,6 +33,11 @@ stringData:
   DB_PASS: "YourStrongPassword123!"
   MYSQL_ROOT_PASSWORD: "YourStrongPassword123!"
 ---
+# ============================================================
+# 3. MySQL Deployment — Database Engine Deployment
+#    Deploys MySQL 8.0 server with local disk storage (/var/data),
+#    UTF-8 encoding, native password auth, and health probes.
+# ============================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -112,6 +127,11 @@ spec:
             path: /var/data/shopnest-mysql
             type: DirectoryOrCreate
 ---
+# ============================================================
+# 4. MySQL Service — Internal Database Networking
+#    Creates a stable ClusterIP internal DNS endpoint (mysql-service:3306)
+#    allowing PHP web containers to reliably communicate with MySQL.
+# ============================================================
 apiVersion: v1
 kind: Service
 metadata:
@@ -126,6 +146,11 @@ spec:
     - port: 3306
       targetPort: 3306
 ---
+# ============================================================
+# 5. Ecommerce App Deployment — Web Application Deployment
+#    Deploys 2 replicas of ShopNest (PHP 8.2 + Apache) with
+#    rolling zero-downtime updates, resource limits, and health checks.
+# ============================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -184,6 +209,11 @@ spec:
             timeoutSeconds: 3
             failureThreshold: 5
 ---
+# ============================================================
+# 6. Ecommerce Service — External Traffic & Load Balancing
+#    Provisions an AWS Classic LoadBalancer (Port 80) and NodePort
+#    (Port 30080) for external user access and browser traffic.
+# ============================================================
 apiVersion: v1
 kind: Service
 metadata:
